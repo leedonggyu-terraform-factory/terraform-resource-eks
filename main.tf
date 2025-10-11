@@ -4,13 +4,13 @@ module "eks" {
 
   for_each = var.items
 
-  cluster_name                   = each.value.cluster_name
+  cluster_name                   = each.key
   cluster_version                = each.value.cluster_version
   cluster_endpoint_public_access = each.value.cluster_endpoint_public_access
 
   cluster_addons                           = each.value.cluster_addons
   enable_cluster_creator_admin_permissions = each.value.enable_cluster_creator_admin_permissions
-  authentication_mode                      = each.value.authentication_mode
+  authentication_mode                      = "API"
 
   eks_managed_node_group_defaults = each.value.eks_managed_node_group_defaults
   eks_managed_node_groups         = each.value.eks_managed_node_groups
@@ -22,7 +22,8 @@ module "eks" {
 
   cluster_tags = each.value.cluster_tags
 
-  access_entries = each.value.access_entries
+  # other modules
+  # access_entries = each.value.access_entries
   cluster_security_group_additional_rules = {
     "default" = {
       description = "Allow default traffic"
@@ -43,12 +44,12 @@ module "ebs_csi_irsa" {
   source   = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   for_each = var.items
 
-  role_name             = "${each.value.cluster_name}-ebs-csi-irsa"
+  role_name             = "${each.key}-ebs-csi-irsa"
   attach_ebs_csi_policy = true
 
   oidc_providers = {
     main = {
-      provider_arn               = module.eks[each.value.cluster_name].oidc_provider_arn
+      provider_arn               = module.eks[each.key].oidc_provider_arn
       namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
     }
   }
@@ -62,10 +63,10 @@ module "blueprints" {
 
   for_each = var.items
 
-  cluster_name      = each.value.cluster_name
-  cluster_endpoint  = module.eks[each.value.cluster_name].cluster_endpoint
+  cluster_name      = each.key
+  cluster_endpoint  = module.eks[ach.key].cluster_endpoint
   cluster_version   = each.value.cluster_version
-  oidc_provider_arn = module.eks[each.value.cluster_name].oidc_provider_arn
+  oidc_provider_arn = module.eks[each.key].oidc_provider_arn
 
   observability_tag = null
 
@@ -86,46 +87,46 @@ module "blueprints" {
   external_dns_route53_zone_arns      = [each.value.blueprints_external_dns_route53_zone_arns]
 
   cert_manager = {
-    role_name = "${each.value.cluster_name}-cert-manager-role"
+    role_name = "${each.key}-cert-manager-role"
   }
   aws_efs_csi_driver = {
-    role_name = "${each.value.cluster_name}-efs-csi-driver-role"
+    role_name = "${each.key}-efs-csi-driver-role"
   }
   aws_cloudwatch_metrics = {
-    role_name = "${each.value.cluster_name}-cloudwatch-metrics-role"
+    role_name = "${each.key}-cloudwatch-metrics-role"
   }
   external_dns = {
-    role_name = "${each.value.cluster_name}-external-dns-role"
+    role_name = "${each.key}-external-dns-role"
   }
   external_secrets = {
-    role_name = "${each.value.cluster_name}-external-secrets-role"
+    role_name = "${each.key}-external-secrets-role"
   }
   aws_load_balancer_controller = {
-    role_name = "${each.value.cluster_name}-lb-controller-role"
+    role_name = "${each.key}-lb-controller-role"
   }
   aws_for_fluentbit = {
-    role_name = "${each.value.cluster_name}-aws-for-fluentbit-role"
+    role_name = "${each.key}-aws-for-fluentbit-role"
   }
   karpenter = {
-    role_name            = "${each.value.cluster_name}-karpenter-role"
+    role_name            = "${each.key}-karpenter-role"
     role_name_use_prefix = false
   }
   karpenter_node = {
-    role_name             = "${each.value.cluster_name}-karpenter-node-group-role"
-    instance_profile_name = "${each.value.cluster_name}-karpenter-node-group"
+    role_name             = "${each.key}-karpenter-node-group-role"
+    instance_profile_name = "${each.key}-karpenter-node-group"
     role_name_use_prefix  = false
   }
   karpenter_sqs = {
-    queue_name = "${each.value.cluster_name}-karpenter-sqs"
+    queue_name = "${each.key}-karpenter-sqs"
   }
   metrics_server = {
-    role_name = "${each.value.cluster_name}-metrics-server-role"
+    role_name = "${each.key}-metrics-server-role"
   }
   argo_rollouts = {
-    role_name = "${each.value.cluster_name}-argo-rollouts-role"
+    role_name = "${each.key}-argo-rollouts-role"
   }
   cluster_autoscaler = {
-    role_name = "${each.value.cluster_name}-cluster-autoscaler-role"
+    role_name = "${each.key}-cluster-autoscaler-role"
   }
 
 }

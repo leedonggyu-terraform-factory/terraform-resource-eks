@@ -67,7 +67,14 @@ module "blueprints" {
   enable_metrics_server               = true
   enable_argo_rollouts                = true
   enable_cluster_autoscaler           = false
-  external_dns_route53_zone_arns      = [each.value.blueprints_external_dns_route53_zone_arns]
+  external_dns_route53_zone_arns      = each.value.blueprints_external_dns_route53_zone_arns
+
+  eks_addons = {
+    aws-ebs-csi-driver = {
+      most_recent              = true
+      service_account_role_arn = module.ebs_csi_driver_irsa[each.key].iam_role_arn
+    }
+  }
 
   cert_manager = {
     role_name = "${each.key}-cert-manager-role"
@@ -112,4 +119,23 @@ module "blueprints" {
     role_name = "${each.key}-cluster-autoscaler-role"
   }
 
+}
+
+module "ebs_csi_driver_irsa" {
+  for_each = var.items
+  source   = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version  = "~> 5.20"
+
+  role_name_prefix = "${each.key}-ebs-csi-driver-"
+
+  attach_ebs_csi_policy = true
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks[each.key].oidc_provider_arn
+      namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
+    }
+  }
+
+  tags = each.value.cluster_tags
 }

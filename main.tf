@@ -47,7 +47,7 @@ module "blueprints" {
   for_each = var.items
 
   cluster_name      = each.key
-  cluster_endpoint  = module.eks[ach.key].cluster_endpoint
+  cluster_endpoint  = module.eks[each.key].cluster_endpoint
   cluster_version   = each.value.cluster_version
   oidc_provider_arn = module.eks[each.key].oidc_provider_arn
 

@@ -1,10 +1,10 @@
 variable "cluster_attr" {
 
   type = object({
-    info                                      = {
+    info                                      = object({
       type = string // hub or spoke
       oidc_provider_arn = string // if hub, not used
-    }
+    })
     cluster_name                             = string
     environment                              = string
     cluster_version                          = string

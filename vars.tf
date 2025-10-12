@@ -46,6 +46,8 @@ variable "gitops_bridge_attr" {
     addons_repo_path = string
     addons_repo_revision = string
   } 
+
+  default = {}
 }
 
 variable "addons" {

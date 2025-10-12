@@ -72,8 +72,6 @@ resource "local_file" "spoke_secret_yaml" {
                 addons_repo_path: "${var.gitops_bridge_attr.addons_repo_path}"
                 addons_repo_revision: "${var.gitops_bridge_attr.addons_repo_revision}"
                 vpc_id: "${var.gitops_bridge_metadata.vpc_id}"
-                webserver_subnet_ids: "${var.gitops_bridge_metadata.webserver_subnet_ids}"
-                was_subnet_ids: "${var.gitops_bridge_metadata.was_subnet_ids}"
         type: Opaque
         stringData:
             name: ${var.cluster_attr.cluster_name}

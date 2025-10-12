@@ -28,7 +28,7 @@ module "gitops-bridge" {
     }
 
     apps = {
-        addons = templatefile("./apps.yaml", {
+        addons = templatefile("${path.module}/apps.yaml", {
             cluster_name = var.cluster_attr.cluster_name
             environment = try(var.cluster_attr.environment, "common")
         })

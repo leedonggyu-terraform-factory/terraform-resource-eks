@@ -13,7 +13,7 @@ module "eks" {
     vpc-cni                = {}
   })
 
-  enable_cluster_creator_admin_permissions = var.enable_cluster_creator_admin_permissions
+  enable_cluster_creator_admin_permissions = var.cluster_attr.enable_cluster_creator_admin_permissions
   authentication_mode                      = "API"
 
   eks_managed_node_group_defaults = try(var.cluster_attr.eks_managed_node_group_defaults, {})

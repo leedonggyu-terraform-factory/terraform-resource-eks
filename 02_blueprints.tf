@@ -104,5 +104,5 @@ module "ebs_csi_driver_irsa" {
     }
   }
 
-  tags = each.value.cluster_tags
+  tags = var.cluster_attr.cluster_tags
 }

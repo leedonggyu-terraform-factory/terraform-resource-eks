@@ -40,3 +40,9 @@ resource "aws_eks_access_entry" "service_node_access_entry" {
     principal_arn = each.key
     type = "EC2_LINUX" 
 }
+
+resource "aws_eks_access_entry" "service_node_access_entry" {
+    cluster_name = var.cluster_attr.cluster_name
+    principal_arn = module.eks.blueprints["management"].karpenter.node_iam_role_arn # Node Role!
+    type = "EC2_LINUX" 
+}

@@ -72,7 +72,7 @@ variable "addons" {
     enable_metrics_server = bool
     enable_argo_rollouts = bool
     enable_cluster_autoscaler = bool
-    external_dns_route53_zone_arns = string
+    external_dns_route53_zone_arns = list(string)
   })
 
   default = {
@@ -87,7 +87,7 @@ variable "addons" {
     enable_metrics_server = false
     enable_argo_rollouts = false
     enable_cluster_autoscaler = false
-    external_dns_route53_zone_arns = ""
+    external_dns_route53_zone_arns = []
   }
 }
 

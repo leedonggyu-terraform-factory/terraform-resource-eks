@@ -23,7 +23,10 @@ module "gitops-bridge" {
             kubernetes_version = var.cluster_attr.cluster_version
         },
         addons = merge(
-            var.addons,
+          {
+            for addon, bool in var.addons:
+              addon => bool if addons != "external_dns_route53_zone_arns"
+          },
         )
     }
 

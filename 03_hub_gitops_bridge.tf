@@ -8,44 +8,49 @@ resource "null_resource" "eks_kubeconfig" {
 
 ////////////////////////////////////////////////////// hub cluster //////////////////////////////////////////////////////
 module "gitops-bridge" {
-    source = "gitops-bridge-dev/gitops-bridge/helm"   
-    // initial gitops-bridge
-    // hub cluster에만 적용
-    create = true
+  count = var.cluster_attr.info.type == "hub" ? 1 : 0
 
-    cluster = {
-        cluster_name = var.cluster_attr.cluster_name
-        environment = try(var.cluster_attr.environment, "common")
-        metadata = merge({
-            addons_repo_url = var.gitops_bridge_attr.addons_repo_url
-            addons_repo_basepath = var.gitops_bridge_attr.addons_repo_basepath
-            addons_repo_path = var.gitops_bridge_attr.addons_repo_path
-            addons_repo_revision = try(var.gitops_bridge_attr.addons_repo_revision, "main")
-            kubernetes_version = var.cluster_attr.cluster_version
-        }, var.gitops_bridge_metadata),
-        addons = merge(
-          {
-            for addon, bool in var.addons:
-              addon => bool if addon != "external_dns_route53_zone_arns"
-          },
-        )
-    }
+  source = "gitops-bridge-dev/gitops-bridge/helm"
+  // initial gitops-bridge
+  // hub cluster에만 적용
+  create = true
 
-    apps = {
-        addons = templatefile("${path.module}/apps.yaml", {
-            cluster_name = var.cluster_attr.cluster_name
-            environment = try(var.cluster_attr.environment, "common")
-        })
-    }
+  cluster = {
+    cluster_name = var.cluster_attr.cluster_name
+    environment  = try(var.cluster_attr.environment, "common")
+    metadata = merge({
+      addons_repo_url      = var.gitops_bridge_attr.addons_repo_url
+      addons_repo_basepath = var.gitops_bridge_attr.addons_repo_basepath
+      addons_repo_path     = var.gitops_bridge_attr.addons_repo_path
+      addons_repo_revision = try(var.gitops_bridge_attr.addons_repo_revision, "main")
+      kubernetes_version   = var.cluster_attr.cluster_version
+    }, var.gitops_bridge_metadata),
+    addons = merge(
+      {
+        for addon, bool in var.addons :
+        addon => bool if addon != "external_dns_route53_zone_arns"
+      },
+    )
+  }
 
-    depends_on = [null_resource.eks_kubeconfig]
+  apps = {
+    addons = templatefile("${path.module}/apps.yaml", {
+      cluster_name = var.cluster_attr.cluster_name
+      environment  = try(var.cluster_attr.environment, "common")
+    })
+  }
+
+  depends_on = [null_resource.eks_kubeconfig]
 }
 
+###############################################################
+####### hub cluster에만 구성
+###############################################################
 module "argocd_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.0"
 
-  count = var.cluster_attr.hub ? 1 : 0
+  count = var.cluster_attr.info.type == "hub" ? 1 : 0
 
   role_name = "${var.cluster_attr.cluster_name}-argocd-hub-role"
 
@@ -68,7 +73,7 @@ module "argocd_irsa" {
 }
 
 resource "aws_iam_policy" "irsa_policy" {
-  count = var.cluster_attr.hub ? 1 : 0
+  count = var.cluster_attr.info.type == "hub" ? 1 : 0
 
   name        = "${var.cluster_attr.cluster_name}-argocd-irsa"
   description = "IRSA policy for ArgoCD"
@@ -90,27 +95,27 @@ resource "aws_iam_policy" "irsa_policy" {
 }
 
 resource "kubernetes_manifest" "argo_app_project" {
-  count = var.cluster_attr.hub ? 1 : 0
-  
+  count = var.cluster_attr.info.type == "hub" ? 1 : 0
+
   manifest = {
     apiVersion = "argoproj.io/v1alpha1"
     kind       = "AppProject"
-    
+
     metadata = {
-      name      = var.cluster_attr.environment == "prd" ?  "${var.cluster_attr.cluster_name}" : "${var.cluster_attr.cluster_name}-${var.cluster_attr.environment}"
+      name      = var.cluster_attr.environment == "prd" ? "${var.cluster_attr.cluster_name}" : "${var.cluster_attr.cluster_name}-${var.cluster_attr.environment}"
       namespace = "argocd"
     }
-    
+
     spec = {
       description = "Project for ${var.cluster_attr.cluster_name}-${var.cluster_attr.environment} cluster"
-      
+
       # Git 저장소 허용 목록
       sourceRepos = [
-       "${var.gitops_bridge_attr.addons_repo_url}.git",
+        "${var.gitops_bridge_attr.addons_repo_url}.git",
         "public.ecr.aws",
         "*" # 필요에 따라 모든 저장소 허용 또는 제한
       ]
-      
+
       # 배포 대상 허용 목록
       destinations = [
         {
@@ -118,7 +123,7 @@ resource "kubernetes_manifest" "argo_app_project" {
           server    = "*"
         }
       ]
-      
+
       # 클러스터 레벨 리소스 허용 목록
       clusterResourceWhitelist = [
         {
@@ -126,7 +131,7 @@ resource "kubernetes_manifest" "argo_app_project" {
           kind  = "*"
         }
       ]
-      
+
       # 네임스페이스 레벨 리소스 허용 목록
       namespaceResourceWhitelist = [
         {
@@ -134,7 +139,7 @@ resource "kubernetes_manifest" "argo_app_project" {
           kind  = "*"
         }
       ]
-      
+
       # RBAC 설정 (선택사항)
       roles = [
         {
@@ -157,7 +162,7 @@ resource "kubernetes_manifest" "argo_app_project" {
           ]
         }
       ]
-      
+
       # Sync 옵션 설정
       syncWindows = [
         {

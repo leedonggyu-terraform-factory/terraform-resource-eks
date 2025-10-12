@@ -6,7 +6,7 @@ module "eks" {
   cluster_version                = try(var.cluster_attr.cluster_version, "1.33") ## 2025.10.12
   cluster_endpoint_public_access = try(var.cluster_attr.cluster_endpoint_public_access, true)
 
-  cluster_addons                           = try(var.cluster_attr.cluster_addons, {
+  cluster_addons = try(var.cluster_attr.cluster_addons, {
     coredns                = {}
     eks-pod-identity-agent = {}
     kube-proxy             = {}

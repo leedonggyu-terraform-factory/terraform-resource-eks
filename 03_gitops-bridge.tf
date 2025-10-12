@@ -6,10 +6,14 @@ resource "null_resource" "eks_kubeconfig" {
   depends_on = [module.eks]
 }
 
+////////////////////////////////////////////////////// hub cluster //////////////////////////////////////////////////////
 module "gitops-bridge" {
     source = "gitops-bridge-dev/gitops-bridge/helm"   
 
+    count = var.cluster_attr.hub ? 1 : 0
+
     // initial gitops-bridge
+    // hub cluster에만 적용
     create = true
 
     cluster = {
@@ -44,6 +48,8 @@ module "argocd_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.0"
 
+  count = var.cluster_attr.hub ? 1 : 0
+
   role_name = "${var.cluster_attr.cluster_name}-argocd-hub-role"
 
   oidc_providers = {
@@ -54,7 +60,7 @@ module "argocd_irsa" {
   }
 
   role_policy_arns = {
-    ArgoCD_EKS_Policy = aws_iam_policy.irsa_policy.arn
+    ArgoCD_EKS_Policy = aws_iam_policy.irsa_policy[0].arn
   }
 
   tags = {
@@ -65,6 +71,8 @@ module "argocd_irsa" {
 }
 
 resource "aws_iam_policy" "irsa_policy" {
+  count = var.cluster_attr.hub ? 1 : 0
+
   name        = "${var.cluster_attr.cluster_name}-argocd-irsa"
   description = "IRSA policy for ArgoCD"
   policy = jsonencode({
@@ -82,4 +90,29 @@ resource "aws_iam_policy" "irsa_policy" {
   })
 
   depends_on = [null_resource.eks_kubeconfig]
+}
+
+////////////////////////////////////////////////////// spoke cluster //////////////////////////////////////////////////////
+resource "kubernetes_secret" "spoke_cluster_secret" {
+  count = var.cluster_attr.hub ? 0 : 1
+  
+  metadata {
+    name = "${var.cluster_attr.cluster_name}-cluster"
+    namespace = "argocd"
+    labels = {
+      "argocd.argoproj.io/secret-type" = "cluster"
+      "argocd.argoproj.io/spoke" = "true"
+    }
+  }
+
+  data = {
+    name = var.cluster_attr.cluster_name
+    server = module.eks.cluster_endpoint
+    config = jsonencode({
+      awsAuthConfig = {
+        clusterName = var.cluster_attr.cluster_name
+        roleArn = module.argocd_irsa[0].iam_role_arn
+      }
+    })
+  }
 }

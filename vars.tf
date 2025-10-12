@@ -1,6 +1,7 @@
 variable "cluster_attr" {
 
   type = object({
+    hub = bool
     cluster_name = string
     environment = string
     cluster_version = string
@@ -11,13 +12,15 @@ variable "cluster_attr" {
     eks_managed_node_groups = any
     cluster_compute_config = map(any)
     vpc_id = string
-    private_subnet_ids = list(string)
+    worker_subnet_ids = list(string)
+    control_plane_subnet_ids = list(string)
     cluster_tags = map(any)
     cloudwatch_log_group_retention_in_days = number
     create_node_security_group = bool
   })
   
   default = {
+    hub = false
     cluster_name = ""
     environment = ""
     cluster_version = ""
@@ -30,7 +33,8 @@ variable "cluster_attr" {
     cluster_compute_config = {}
 
     vpc_id = ""
-    private_subnet_ids = []
+    worker_subnet_ids = []
+    control_plane_subnet_ids = []
 
     cluster_tags = {}
 

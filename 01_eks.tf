@@ -21,8 +21,8 @@ module "eks" {
   cluster_compute_config          = try(var.cluster_attr.cluster_compute_config, {})
 
   vpc_id                   = try(var.cluster_attr.vpc_id, "")
-  subnet_ids               = try(var.cluster_attr.private_subnet_ids, [])
-  control_plane_subnet_ids = try(var.cluster_attr.private_subnet_ids, [])
+  subnet_ids               = try(var.cluster_attr.worker_subnet_ids, [])
+  control_plane_subnet_ids = try(var.cluster_attr.control_plane_subnet_ids, [])
 
   cluster_tags = merge(
     var.cluster_attr.cluster_tags,

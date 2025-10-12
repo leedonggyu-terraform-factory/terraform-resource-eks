@@ -34,58 +34,58 @@ module "blueprints" {
 
   cert_manager = var.addons.enable_cert_manager ? {
     role_name = "${var.cluster_attr.cluster_name}-cert-manager-role"
-  } : {}
+  } : null
 
   aws_efs_csi_driver = var.addons.enable_aws_efs_csi_driver ? {
     role_name = "${var.cluster_attr.cluster_name}-efs-csi-driver-role"
-  } : {}
+  } : null
 
   aws_cloudwatch_metrics = var.addons.enable_aws_cloudwatch_metrics ? {
     role_name = "${var.cluster_attr.cluster_name}-cloudwatch-metrics-role"
-  } : {}
+  } : null
 
   external_dns = var.addons.enable_external_dns ? {
     role_name = "${var.cluster_attr.cluster_name}-external-dns-role"
-  } : {}
+  } : null
 
   external_secrets = var.addons.enable_external_secrets ? {
     role_name = "${var.cluster_attr.cluster_name}-external-secrets-role"
-  } : {}
+  } : null
 
   aws_load_balancer_controller = var.addons.enable_aws_load_balancer_controller ? {
     role_name = "${var.cluster_attr.cluster_name}-lb-controller-role"
-  } : {}
+  } : null
 
   aws_for_fluentbit = var.addons.enable_aws_for_fluentbit ? {
     role_name = "${var.cluster_attr.cluster_name}-aws-for-fluentbit-role"
-  } : {}
+  } : null
 
   karpenter = var.addons.enable_karpenter ? {
     role_name            = "${var.cluster_attr.cluster_name}-karpenter-role"
     role_name_use_prefix = false
-  } : {}
+  } : null
 
   karpenter_node = var.addons.enable_karpenter ? {
     role_name             = "${var.cluster_attr.cluster_name}-karpenter-node-group-role"
     instance_profile_name = "${var.cluster_attr.cluster_name}-karpenter-node-group"
     role_name_use_prefix  = false
-  } : {}
+  } : null
 
   karpenter_sqs = var.addons.enable_karpenter ? {
     queue_name = "${var.cluster_attr.cluster_name}-karpenter-sqs"
-  } : {}
+  } : null
 
   metrics_server = var.addons.enable_metrics_server ? {
     role_name = "${var.cluster_attr.cluster_name}-metrics-server-role"
-  } : {}
+  } : null
 
   argo_rollouts = var.addons.enable_argo_rollouts ? {
     role_name = "${var.cluster_attr.cluster_name}-argo-rollouts-role"
-  } : {}
+  } : null
 
   cluster_autoscaler = var.addons.enable_cluster_autoscaler ? {
     role_name = "${var.cluster_attr.cluster_name}-cluster-autoscaler-role"
-  } : {}
+  } : null
 
 }
 

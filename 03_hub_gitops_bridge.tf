@@ -176,5 +176,5 @@ resource "kubernetes_manifest" "argo_app_project" {
     }
   }
 
-  depends_on = [module.gitops-bridge, module.eks]
+  depends_on = [module.gitops-bridge, module.eks, null_resource.eks_kubeconfig]
 }

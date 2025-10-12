@@ -55,7 +55,7 @@ module "argocd_irsa" {
   }
 
   tags = {
-    Name = "${var.cluster_common.name}-argocd-hub-role"
+    Name = "${var.cluster_attr.cluster_name}-argocd-hub-role"
   }
 
   depends_on = [null_resource.eks_kubeconfig]

@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cluster-addons
+  namespace: argocd
+spec:
+  syncPolicy:
+    preserveResourcesOnDeletion: true ## 삭제 시 리소스 보존
+  generators:
+    - clusters: {}
+  template:
+    metadata:
+      name: 'cluster-addons'
+      labels:
+        environment: '${environment}'
+    spec:
+      project: default
+      source:
+        repoURL: '{t{metadata.annotations.addons_repo_url}}'
+        path: '{{metadata.annotations.addons_repo_basepath}}/{{metadata.annotations.addons_repo_path}}'
+        targetRevision: '{{metadata.annotations.addons_repo_revision}}'
+        directory:
+          recurse: true
+          exclude: exclude/*
+      destination:
+        namespace: 'argocd'
+        name: '${cluster_name}'
+      syncPolicy:
+        automated: {} # 자동 동기화 설정

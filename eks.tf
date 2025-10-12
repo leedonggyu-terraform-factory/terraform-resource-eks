@@ -2,25 +2,34 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.31"
 
-  for_each = var.items
+  cluster_name                   = var.cluster_attr.cluster_name
+  cluster_version                = try(var.cluster_attr.cluster_version, "1.33") ## 2025.10.12
+  cluster_endpoint_public_access = try(var.cluster_attr.cluster_endpoint_public_access, true)
 
-  cluster_name                   = each.key
-  cluster_version                = each.value.cluster_version
-  cluster_endpoint_public_access = each.value.cluster_endpoint_public_access
+  cluster_addons                           = try(var.cluster_attr.cluster_addons, {
+    coredns                = {}
+    eks-pod-identity-agent = {}
+    kube-proxy             = {}
+    vpc-cni                = {}
+  })
 
-  cluster_addons                           = each.value.cluster_addons
-  enable_cluster_creator_admin_permissions = each.value.enable_cluster_creator_admin_permissions
+  enable_cluster_creator_admin_permissions = var.enable_cluster_creator_admin_permissions
   authentication_mode                      = "API"
 
-  eks_managed_node_group_defaults = each.value.eks_managed_node_group_defaults
-  eks_managed_node_groups         = each.value.eks_managed_node_groups
-  cluster_compute_config          = each.value.cluster_compute_config
+  eks_managed_node_group_defaults = try(var.cluster_attr.eks_managed_node_group_defaults, {})
+  eks_managed_node_groups         = try(var.cluster_attr.eks_managed_node_groups, {})
+  cluster_compute_config          = try(var.cluster_attr.cluster_compute_config, {})
 
-  vpc_id                   = each.value.vpc_id
-  subnet_ids               = each.value.subnet_ids
-  control_plane_subnet_ids = each.value.control_plane_subnet_ids
+  vpc_id                   = try(var.cluster_attr.vpc_id, "")
+  subnet_ids               = try(var.cluster_attr.private_subnet_ids, [])
+  control_plane_subnet_ids = try(var.cluster_attr.private_subnet_ids, [])
 
-  cluster_tags = each.value.cluster_tags
+  cluster_tags = merge(
+    var.cluster_attr.cluster_tags,
+    {
+      "Computing" : "EKS"
+    }
+  )
 
   # other modules
   # access_entries = each.value.access_entries
@@ -30,99 +39,147 @@ module "eks" {
       from_port   = 443
       to_port     = 443
       protocol    = "tcp"
-      cidr_blocks = [try(each.value.default_ingress_cidr_block, "0.0.0.0/0")]
+      cidr_blocks = ["0.0.0.0/0"]
       type        = "ingress"
     }
   }
 
-  cloudwatch_log_group_retention_in_days = each.value.cloudwatch_log_group_retention_in_days
-  create_node_security_group             = each.value.create_node_security_group
-  tags                                   = each.value.tags
+  cloudwatch_log_group_retention_in_days = try(var.cluster_attr.cloudwatch_log_group_retention_in_days, 3)
+  create_node_security_group             = try(var.cluster_attr.create_node_security_group, true)
+  tags                                   = var.cluster_attr.cluster_tags
 }
 
 module "blueprints" {
   source  = "aws-ia/eks-blueprints-addons/aws"
   version = "~> 1.0"
 
-  for_each = var.items
-
-  cluster_name      = each.key
-  cluster_endpoint  = module.eks[each.key].cluster_endpoint
-  cluster_version   = each.value.cluster_version
-  oidc_provider_arn = module.eks[each.key].oidc_provider_arn
+  cluster_name      = var.cluster_attr.cluster_name
+  cluster_endpoint  = module.eks.cluster_endpoint
+  cluster_version   = var.cluster_attr.cluster_version
+  oidc_provider_arn = module.eks.oidc_provider_arn
 
   observability_tag = null
 
   // 실제 생성되진 않고 IAM 권한만 준비
   create_kubernetes_resources = false
 
-  enable_cert_manager                 = true
-  enable_aws_efs_csi_driver           = true
-  enable_aws_cloudwatch_metrics       = true
-  enable_external_dns                 = true
-  enable_external_secrets             = true
-  enable_aws_load_balancer_controller = true
-  enable_aws_for_fluentbit            = true
-  enable_karpenter                    = true
-  enable_metrics_server               = true
-  enable_argo_rollouts                = true
-  enable_cluster_autoscaler           = false
-  external_dns_route53_zone_arns      = each.value.blueprints_external_dns_route53_zone_arns
+  enable_cert_manager                 = var.addons.enable_cert_manager
+  enable_aws_efs_csi_driver           = var.addons.enable_aws_efs_csi_driver
+  enable_aws_cloudwatch_metrics       = var.addons.enable_aws_cloudwatch_metrics
+  enable_external_dns                 = var.addons.enable_external_dns
+  enable_external_secrets             = var.addons.enable_external_secrets
+  enable_aws_load_balancer_controller = var.addons.enable_aws_load_balancer_controller
+  enable_aws_for_fluentbit            = var.addons.enable_aws_for_fluentbit
+  enable_karpenter                    = var.addons.enable_karpenter
+  enable_metrics_server               = var.addons.enable_metrics_server
+  enable_argo_rollouts                = var.addons.enable_argo_rollouts
+  enable_cluster_autoscaler           = var.addons.enable_cluster_autoscaler
+  external_dns_route53_zone_arns      = var.addons.external_dns_route53_zone_arns
 
   eks_addons = {
     aws-ebs-csi-driver = {
       most_recent              = true
-      service_account_role_arn = module.ebs_csi_driver_irsa[each.key].iam_role_arn
+      service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
     }
   }
 
-  cert_manager = {
-    role_name = "${each.key}-cert-manager-role"
+  dynamic "cert_manager" {
+    for_each = var.addons.enable_cert_manager ? [1] : []
+    content {
+      role_name = "${var.cluster_attr.cluster_name}-cert-manager-role"
+    }
   }
-  aws_efs_csi_driver = {
-    role_name = "${each.key}-efs-csi-driver-role"
+
+  dynamic "aws_efs_csi_driver" {
+    for_each = var.addons.enable_aws_efs_csi_driver ? [1] : []
+    content {
+      role_name = "${var.cluster_attr.cluster_name}-efs-csi-driver-role"
+    }
   }
-  aws_cloudwatch_metrics = {
-    role_name = "${each.key}-cloudwatch-metrics-role"
+
+  dynamic "aws_cloudwatch_metrics" {
+    for_each = var.addons.enable_aws_cloudwatch_metrics ? [1] : []
+    content {
+      role_name = "${var.cluster_attr.cluster_name}-cloudwatch-metrics-role"
+    }
   }
-  external_dns = {
-    role_name = "${each.key}-external-dns-role"
+
+  dynamic "external_dns" {
+    for_each = var.addons.enable_external_dns ? [1] : []
+    content {
+      role_name = "${var.cluster_attr.cluster_name}-external-dns-role"
+    }
   }
-  external_secrets = {
-    role_name = "${each.key}-external-secrets-role"
+
+  dynamic "external_secrets" {
+    for_each = var.addons.enable_external_secrets ? [1] : []
+    content {
+      role_name = "${var.cluster_attr.cluster_name}-external-secrets-role"
+    }
   }
-  aws_load_balancer_controller = {
-    role_name = "${each.key}-lb-controller-role"
+
+  dynamic "aws_load_balancer_controller" {
+    for_each = var.addons.enable_aws_load_balancer_controller ? [1] : []
+    content {
+      role_name = "${var.cluster_attr.cluster_name}-lb-controller-role"
+    }
   }
-  aws_for_fluentbit = {
-    role_name = "${each.key}-aws-for-fluentbit-role"
+
+  dynamic "aws_for_fluentbit" {
+    for_each = var.addons.enable_aws_for_fluentbit ? [1] : []
+    content {
+      role_name = "${var.cluster_attr.cluster_name}-aws-for-fluentbit-role"
+    }
   }
-  karpenter = {
-    role_name            = "${each.key}-karpenter-role"
-    role_name_use_prefix = false
+
+  dynamic "karpenter" {
+    for_each = var.addons.enable_karpenter ? [1] : []
+    content {
+      role_name            = "${var.cluster_attr.cluster_name}-karpenter-role"
+      role_name_use_prefix = false
+    }
   }
-  karpenter_node = {
-    role_name             = "${each.key}-karpenter-node-group-role"
-    instance_profile_name = "${each.key}-karpenter-node-group"
-    role_name_use_prefix  = false
+
+  dynamic "karpenter_node" {
+    for_each = var.addons.enable_karpenter ? [1] : []
+    content {
+      role_name             = "${var.cluster_attr.cluster_name}-karpenter-node-group-role"
+      instance_profile_name = "${var.cluster_attr.cluster_name}-karpenter-node-group"
+      role_name_use_prefix  = false
+    }
   }
-  karpenter_sqs = {
-    queue_name = "${each.key}-karpenter-sqs"
+
+  dynamic "karpenter_sqs" {
+    for_each = var.addons.enable_karpenter ? [1] : []
+    content {
+      queue_name = "${var.cluster_attr.cluster_name}-karpenter-sqs"
+    }
   }
-  metrics_server = {
-    role_name = "${each.key}-metrics-server-role"
+
+  dynamic "metrics_server" {
+    for_each = var.addons.enable_metrics_server ? [1] : []
+    content {
+      role_name = "${var.cluster_attr.cluster_name}-metrics-server-role"
+    }
   }
-  argo_rollouts = {
-    role_name = "${each.key}-argo-rollouts-role"
+
+  dynamic "argo_rollouts" {
+    for_each = var.addons.enable_argo_rollouts ? [1] : []
+    content {
+      role_name = "${var.cluster_attr.cluster_name}-argo-rollouts-role"
+    }
   }
-  cluster_autoscaler = {
-    role_name = "${each.key}-cluster-autoscaler-role"
+
+  dynamic "cluster_autoscaler" {
+    for_each = var.addons.enable_cluster_autoscaler ? [1] : []
+    content {
+      role_name = "${var.cluster_attr.cluster_name}-cluster-autoscaler-role"
+    }
   }
 
 }
 
 module "ebs_csi_driver_irsa" {
-  for_each = var.items
   source   = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version  = "~> 5.20"
 
@@ -132,7 +189,7 @@ module "ebs_csi_driver_irsa" {
 
   oidc_providers = {
     main = {
-      provider_arn               = module.eks[each.key].oidc_provider_arn
+      provider_arn               = module.eks.oidc_provider_arn
       namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
     }
   }

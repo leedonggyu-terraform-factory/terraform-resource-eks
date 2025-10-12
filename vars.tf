@@ -22,7 +22,7 @@ variable "cluster_attr" {
     cluster_version = ""
     cluster_endpoint_public_access = true
     cluster_addons = {}
-    enable_cluster_creator_admin_permissions = ""
+    enable_cluster_creator_admin_permissions = true
     
     eks_managed_node_group_defaults = {}
     eks_managed_node_groups = {}
@@ -40,12 +40,12 @@ variable "cluster_attr" {
 
 variable "gitops_bridge_attr" {
 
-  type = {
+  type = object({
     addons_repo_url = string
     addons_repo_basepath = string
     addons_repo_path = string
     addons_repo_revision = string
-  } 
+  })
 
   default = {
     addons_repo_url = ""

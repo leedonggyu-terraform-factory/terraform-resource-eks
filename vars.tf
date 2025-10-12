@@ -60,6 +60,12 @@ variable "gitops_bridge_attr" {
   }
 }
 
+variable "gitops_bridge_metadata" {
+  type = any
+  description = "argocd 에 필요한 metadata 정보"
+  default = {}
+}
+
 variable "addons" {
 
   description = "실제 Addons 들은 GitOps Bridge 내에서 구성합니다"

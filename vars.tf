@@ -90,3 +90,24 @@ variable "addons" {
     external_dns_route53_zone_arns = []
   }
 }
+
+variable "access_entries_user" {
+
+  default = {
+    "AmazonEKSClusterAdminPolicy" : {
+      user_role_arns = []
+    }
+
+  }
+
+}
+
+variable "access_entries_role" {
+
+  default = {
+    "EC2_LINUX" : {
+      service_role_arns = []
+    }
+
+  }
+}

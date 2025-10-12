@@ -1,13 +1,14 @@
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
-![eks](./docs/eks.png)
+![eks](./docs/eks-2025.png)
 
 ## Providers
 
 | Name | Version |
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | n/a |
+| <a name="provider_local"></a> [local](#provider\_local) | n/a |
 | <a name="provider_null"></a> [null](#provider\_null) | n/a |
 
 ## Modules
@@ -19,6 +20,7 @@
 | <a name="module_ebs_csi_driver_irsa"></a> [ebs\_csi\_driver\_irsa](#module\_ebs\_csi\_driver\_irsa) | terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks | ~> 5.20 |
 | <a name="module_eks"></a> [eks](#module\_eks) | terraform-aws-modules/eks/aws | ~> 20.31 |
 | <a name="module_gitops-bridge"></a> [gitops-bridge](#module\_gitops-bridge) | gitops-bridge-dev/gitops-bridge/helm | n/a |
+| <a name="module_spoke_argocd_irsa"></a> [spoke\_argocd\_irsa](#module\_spoke\_argocd\_irsa) | terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks | ~> 5.0 |
 
 ## Resources
 
@@ -29,6 +31,8 @@
 | [aws_eks_access_entry.user_access_entry](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_access_entry) | resource |
 | [aws_eks_access_policy_association.user_access_policy_association](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_access_policy_association) | resource |
 | [aws_iam_policy.irsa_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_policy.spoke_eks_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [local_file.spoke_secret_yaml](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) | resource |
 | [null_resource.eks_kubeconfig](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 
 ## Inputs
@@ -37,9 +41,10 @@
 |------|-------------|------|---------|:--------:|
 | <a name="input_access_entries_role"></a> [access\_entries\_role](#input\_access\_entries\_role) | n/a | `any` | <pre>{<br/>  "EC2_LINUX": []<br/>}</pre> | no |
 | <a name="input_access_entries_user"></a> [access\_entries\_user](#input\_access\_entries\_user) | n/a | `any` | <pre>{<br/>  "AmazonEKSClusterAdminPolicy": []<br/>}</pre> | no |
-| <a name="input_addons"></a> [addons](#input\_addons) | 실제 Addons 들은 GitOps Bridge 내에서 구성합니다 | <pre>object({<br/>    enable_cert_manager = bool<br/>    enable_aws_efs_csi_driver = bool<br/>    enable_aws_cloudwatch_metrics = bool<br/>    enable_external_dns = bool<br/>    enable_external_secrets = bool<br/>    enable_aws_load_balancer_controller = bool<br/>    enable_aws_for_fluentbit = bool<br/>    enable_karpenter = bool<br/>    enable_metrics_server = bool<br/>    enable_argo_rollouts = bool<br/>    enable_cluster_autoscaler = bool<br/>    external_dns_route53_zone_arns = list(string)<br/>  })</pre> | <pre>{<br/>  "enable_argo_rollouts": false,<br/>  "enable_aws_cloudwatch_metrics": false,<br/>  "enable_aws_efs_csi_driver": false,<br/>  "enable_aws_for_fluentbit": false,<br/>  "enable_aws_load_balancer_controller": false,<br/>  "enable_cert_manager": false,<br/>  "enable_cluster_autoscaler": false,<br/>  "enable_external_dns": false,<br/>  "enable_external_secrets": false,<br/>  "enable_karpenter": false,<br/>  "enable_metrics_server": false,<br/>  "external_dns_route53_zone_arns": []<br/>}</pre> | no |
-| <a name="input_cluster_attr"></a> [cluster\_attr](#input\_cluster\_attr) | n/a | <pre>object({<br/>    cluster_name = string<br/>    environment = string<br/>    cluster_version = string<br/>    cluster_endpoint_public_access = bool<br/>    cluster_addons = map(any)<br/>    enable_cluster_creator_admin_permissions = bool<br/>    eks_managed_node_group_defaults = any<br/>    eks_managed_node_groups = any<br/>    cluster_compute_config = map(any)<br/>    vpc_id = string<br/>    private_subnet_ids = list(string)<br/>    cluster_tags = map(any)<br/>    cloudwatch_log_group_retention_in_days = number<br/>    create_node_security_group = bool<br/>  })</pre> | <pre>{<br/>  "cloudwatch_log_group_retention_in_days": 0,<br/>  "cluster_addons": {},<br/>  "cluster_compute_config": {},<br/>  "cluster_endpoint_public_access": true,<br/>  "cluster_name": "",<br/>  "cluster_tags": {},<br/>  "cluster_version": "",<br/>  "create_node_security_group": true,<br/>  "eks_managed_node_group_defaults": {},<br/>  "eks_managed_node_groups": {},<br/>  "enable_cluster_creator_admin_permissions": true,<br/>  "environment": "",<br/>  "private_subnet_ids": [],<br/>  "vpc_id": ""<br/>}</pre> | no |
-| <a name="input_gitops_bridge_attr"></a> [gitops\_bridge\_attr](#input\_gitops\_bridge\_attr) | n/a | <pre>object({<br/>    addons_repo_url = string<br/>    addons_repo_basepath = string<br/>    addons_repo_path = string<br/>    addons_repo_revision = string<br/>  })</pre> | <pre>{<br/>  "addons_repo_basepath": "",<br/>  "addons_repo_path": "",<br/>  "addons_repo_revision": "",<br/>  "addons_repo_url": ""<br/>}</pre> | no |
+| <a name="input_addons"></a> [addons](#input\_addons) | 실제 Addons 들은 GitOps Bridge 내에서 구성합니다 | <pre>object({<br/>    enable_cert_manager                 = bool<br/>    enable_aws_efs_csi_driver           = bool<br/>    enable_aws_cloudwatch_metrics       = bool<br/>    enable_external_dns                 = bool<br/>    enable_external_secrets             = bool<br/>    enable_aws_load_balancer_controller = bool<br/>    enable_aws_for_fluentbit            = bool<br/>    enable_karpenter                    = bool<br/>    enable_metrics_server               = bool<br/>    enable_argo_rollouts                = bool<br/>    enable_cluster_autoscaler           = bool<br/>    external_dns_route53_zone_arns      = list(string)<br/>  })</pre> | <pre>{<br/>  "enable_argo_rollouts": false,<br/>  "enable_aws_cloudwatch_metrics": false,<br/>  "enable_aws_efs_csi_driver": false,<br/>  "enable_aws_for_fluentbit": false,<br/>  "enable_aws_load_balancer_controller": false,<br/>  "enable_cert_manager": false,<br/>  "enable_cluster_autoscaler": false,<br/>  "enable_external_dns": false,<br/>  "enable_external_secrets": false,<br/>  "enable_karpenter": false,<br/>  "enable_metrics_server": false,<br/>  "external_dns_route53_zone_arns": []<br/>}</pre> | no |
+| <a name="input_cluster_attr"></a> [cluster\_attr](#input\_cluster\_attr) | n/a | <pre>object({<br/>    info                                      = object({<br/>      type = string // hub or spoke<br/>      oidc_provider_arn = string // if hub, not used<br/>    })<br/>    cluster_name                             = string<br/>    environment                              = string<br/>    cluster_version                          = string<br/>    cluster_endpoint_public_access           = bool<br/>    cluster_addons                           = map(any)<br/>    enable_cluster_creator_admin_permissions = bool<br/>    eks_managed_node_group_defaults          = any<br/>    eks_managed_node_groups                  = any<br/>    cluster_compute_config                   = map(any)<br/>    vpc_id                                   = string<br/>    worker_subnet_ids                        = list(string)<br/>    control_plane_subnet_ids                 = list(string)<br/>    cluster_tags                             = map(any)<br/>    cloudwatch_log_group_retention_in_days   = number<br/>    create_node_security_group               = bool<br/>  })</pre> | <pre>{<br/>  "cloudwatch_log_group_retention_in_days": 0,<br/>  "cluster_addons": {},<br/>  "cluster_compute_config": {},<br/>  "cluster_endpoint_public_access": true,<br/>  "cluster_name": "",<br/>  "cluster_tags": {},<br/>  "cluster_version": "",<br/>  "control_plane_subnet_ids": [],<br/>  "create_node_security_group": true,<br/>  "eks_managed_node_group_defaults": {},<br/>  "eks_managed_node_groups": {},<br/>  "enable_cluster_creator_admin_permissions": true,<br/>  "environment": "",<br/>  "info": {<br/>    "oidc_provider_arn": "",<br/>    "type": "spoke"<br/>  },<br/>  "vpc_id": "",<br/>  "worker_subnet_ids": []<br/>}</pre> | no |
+| <a name="input_gitops_bridge_attr"></a> [gitops\_bridge\_attr](#input\_gitops\_bridge\_attr) | n/a | <pre>object({<br/>    addons_repo_url      = string<br/>    addons_repo_basepath = string<br/>    addons_repo_path     = string<br/>    addons_repo_revision = string<br/>  })</pre> | <pre>{<br/>  "addons_repo_basepath": "",<br/>  "addons_repo_path": "",<br/>  "addons_repo_revision": "",<br/>  "addons_repo_url": ""<br/>}</pre> | no |
+| <a name="input_gitops_bridge_metadata"></a> [gitops\_bridge\_metadata](#input\_gitops\_bridge\_metadata) | argocd 에 필요한 metadata 정보 | `any` | `{}` | no |
 
 ## Outputs
 

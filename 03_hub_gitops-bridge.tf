@@ -92,27 +92,87 @@ resource "aws_iam_policy" "irsa_policy" {
   depends_on = [null_resource.eks_kubeconfig]
 }
 
-////////////////////////////////////////////////////// spoke cluster //////////////////////////////////////////////////////
-resource "kubernetes_secret" "spoke_cluster_secret" {
-  count = var.cluster_attr.hub ? 0 : 1
+resource "kubernetes_manifest" "argo_app_project" {
+  count = var.cluster_attr.hub ? 1 : 0
   
-  metadata {
-    name = "${var.cluster_attr.cluster_name}-cluster"
-    namespace = "argocd"
-    labels = {
-      "argocd.argoproj.io/secret-type" = "cluster"
-      "argocd.argoproj.io/spoke" = "true"
+  manifest = {
+    apiVersion = "argoproj.io/v1alpha1"
+    kind       = "AppProject"
+    
+    metadata = {
+      name      = var.cluster_attr.environment == "prd" ?  "${var.cluster_attr.cluster_name}" : "${var.cluster_attr.cluster_name}-${var.cluster_attr.environment}"
+      namespace = "argocd"
+    }
+    
+    spec = {
+      description = "Project for ${var.cluster_attr.cluster_name}-${var.cluster_attr.environment} cluster"
+      
+      # Git 저장소 허용 목록
+      sourceRepos = [
+       "${var.gitops_bridge_attr.addons_repo_url}.git",
+        "public.ecr.aws",
+        "*" # 필요에 따라 모든 저장소 허용 또는 제한
+      ]
+      
+      # 배포 대상 허용 목록
+      destinations = [
+        {
+          namespace = "*"
+          server    = "*"
+        }
+      ]
+      
+      # 클러스터 레벨 리소스 허용 목록
+      clusterResourceWhitelist = [
+        {
+          group = "*"
+          kind  = "*"
+        }
+      ]
+      
+      # 네임스페이스 레벨 리소스 허용 목록
+      namespaceResourceWhitelist = [
+        {
+          group = "*"
+          kind  = "*"
+        }
+      ]
+      
+      # RBAC 설정 (선택사항)
+      roles = [
+        {
+          name = "admin"
+          policies = [
+            "p, proj:${var.cluster_attr.cluster_name}-${var.cluster_attr.environment}:admin, applications, *, ${var.cluster_attr.cluster_name}-${var.cluster_attr.environment}/*, allow",
+            "p, proj:${var.cluster_attr.cluster_name}-${var.cluster_attr.environment}:admin, repositories, *, *, allow",
+          ]
+          groups = [
+            "argocd-admins"
+          ]
+        },
+        {
+          name = "readonly"
+          policies = [
+            "p, proj:${var.cluster_attr.cluster_name}-${var.cluster_attr.environment}:readonly, applications, get, ${var.cluster_attr.cluster_name}-${var.cluster_attr.environment}/*, allow",
+          ]
+          groups = [
+            "argocd-readonly"
+          ]
+        }
+      ]
+      
+      # Sync 옵션 설정
+      syncWindows = [
+        {
+          kind         = "allow"
+          schedule     = "* * * * *"
+          duration     = "24h"
+          applications = ["*"]
+          manualSync   = true
+        }
+      ]
     }
   }
 
-  data = {
-    name = var.cluster_attr.cluster_name
-    server = module.eks.cluster_endpoint
-    config = jsonencode({
-      awsAuthConfig = {
-        clusterName = var.cluster_attr.cluster_name
-        roleArn = module.argocd_irsa[0].iam_role_arn
-      }
-    })
-  }
+  depends_on = [module.gitops-bridge, module.eks]
 }

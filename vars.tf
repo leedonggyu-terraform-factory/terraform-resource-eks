@@ -2,12 +2,13 @@ variable "cluster_attr" {
 
   type = object({
     cluster_name = string
+    environment = string
     cluster_version = string
     cluster_endpoint_public_access = bool
     cluster_addons = map(any)
     enable_cluster_creator_admin_permissions = bool
-    eks_managed_node_group_defaults = map(any)
-    eks_managed_node_groups = map(any)
+    eks_managed_node_group_defaults = any
+    eks_managed_node_groups = any
     cluster_compute_config = map(any)
     vpc_id = string
     private_subnet_ids = list(string)

@@ -47,7 +47,12 @@ variable "gitops_bridge_attr" {
     addons_repo_revision = string
   } 
 
-  default = {}
+  default = {
+    addons_repo_url = ""
+    addons_repo_basepath = ""
+    addons_repo_path = ""
+    addons_repo_revision = ""
+  }
 }
 
 variable "addons" {
@@ -69,5 +74,18 @@ variable "addons" {
     external_dns_route53_zone_arns = list(string)
   })
 
-  default = {}
+  default = {
+    enable_cert_manager = false
+    enable_aws_efs_csi_driver = false
+    enable_aws_cloudwatch_metrics = false
+    enable_external_dns = false
+    enable_external_secrets = false
+    enable_aws_load_balancer_controller = false
+    enable_aws_for_fluentbit = false
+    enable_karpenter = false
+    enable_metrics_server = false
+    enable_argo_rollouts = false
+    enable_cluster_autoscaler = false
+    external_dns_route53_zone_arns = []
+  }
 }

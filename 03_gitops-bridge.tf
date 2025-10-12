@@ -25,7 +25,7 @@ module "gitops-bridge" {
         addons = merge(
           {
             for addon, bool in var.addons:
-              addon => bool if addons != "external_dns_route53_zone_arns"
+              addon => bool if addon != "external_dns_route53_zone_arns"
           },
         )
     }

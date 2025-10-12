@@ -52,27 +52,42 @@ resource "aws_iam_policy" "spoke_eks_access" {
   })
 }
 
-# resource "local_file" "spoke_secret_yaml" {
-#     count = var.cluster_attr.info.type == "spoke" ? 1 : 0
+resource "local_file" "spoke_secret_yaml" {
+    count = var.cluster_attr.info.type == "spoke" ? 1 : 0
 
-#     filename = "./${var.cluster_attr.cluster_name}-spoke-cluster.yaml"
+    filename = "./${var.cluster_attr.cluster_name}-spoke-cluster.yaml"
 
-#     content = <<-EOT
-#         apiVersion: v1
-#         kind: Secret
-#         metadata:
-#             name: ${var.cluster_attr.cluster_name}-spoke-cluster
-#             namespace: argocd
-#             labels:
-#                 argo.argoproj.io/secret-type: cluster
-#                 environment: ${var.cluster_attr.environment}
-#             annotations:
-#                 addons_repo_url: "${var.gitops_bridge_attr.addons_repo_url}"
-#                 addons_repo_basepath: "${var.gitops_bridge_attr.addons_repo_basepath}"
-#                 addons_repo_path: "${var.gitops_bridge_attr.addons_repo_path}"
-#                 addons_repo_revision: "${var.gitops_bridge_attr.addons_repo_revision}"
-
-
-
-#     EOT
-# }
+    content = <<-EOT
+        apiVersion: v1
+        kind: Secret
+        metadata:
+            name: ${var.cluster_attr.cluster_name}-spoke-cluster
+            namespace: argocd
+            labels:
+                argocd.argoproj.io/secret-type: cluster
+                environment: ${var.cluster_attr.environment}
+            annotations:
+                addons_repo_url: "${var.gitops_bridge_attr.addons_repo_url}"
+                addons_repo_basepath: "${var.gitops_bridge_attr.addons_repo_basepath}"
+                addons_repo_path: "${var.gitops_bridge_attr.addons_repo_path}"
+                addons_repo_revision: "${var.gitops_bridge_attr.addons_repo_revision}"
+                vpc_id: "${var.gitops_bridge_metadata.vpc_id}"
+                webserver_subnet_ids: "${var.gitops_bridge_metadata.webserver_subnet_ids}"
+                was_subnet_ids: "${var.gitops_bridge_metadata.was_subnet_ids}"
+        type: Opaque
+        stringData:
+            name: ${var.cluster_attr.cluster_name}
+            server: ${module.eks.cluster_endpoint}
+            config: |
+                {
+                "awsAuthConfig": {
+                    "clusterName": "${var.cluster_attr.cluster_name}",
+                    "roleArn": "${module.spoke_argocd_irsa[0].iam_role_arn}"
+                },
+                "tlsClientConfig": {
+                    "insecure": false,
+                    "caData": "${module.eks.cluster_certificate_authority_data}"
+                    }
+                }
+    EOT
+}

@@ -83,99 +83,60 @@ module "blueprints" {
     }
   }
 
-  dynamic "cert_manager" {
-    for_each = var.addons.enable_cert_manager ? [1] : []
-    content {
-      role_name = "${var.cluster_attr.cluster_name}-cert-manager-role"
-    }
-  }
+  cert_manager = var.addons.enable_cert_manager ? {
+    role_name = "${var.cluster_attr.cluster_name}-cert-manager-role"
+  } : {}
 
-  dynamic "aws_efs_csi_driver" {
-    for_each = var.addons.enable_aws_efs_csi_driver ? [1] : []
-    content {
-      role_name = "${var.cluster_attr.cluster_name}-efs-csi-driver-role"
-    }
-  }
+  aws_efs_csi_driver = var.addons.enable_aws_efs_csi_driver ? {
+    role_name = "${var.cluster_attr.cluster_name}-efs-csi-driver-role"
+  } : {}
 
-  dynamic "aws_cloudwatch_metrics" {
-    for_each = var.addons.enable_aws_cloudwatch_metrics ? [1] : []
-    content {
-      role_name = "${var.cluster_attr.cluster_name}-cloudwatch-metrics-role"
-    }
-  }
+  aws_cloudwatch_metrics = var.addons.enable_aws_cloudwatch_metrics ? {
+    role_name = "${var.cluster_attr.cluster_name}-cloudwatch-metrics-role"
+  } : {}
 
-  dynamic "external_dns" {
-    for_each = var.addons.enable_external_dns ? [1] : []
-    content {
-      role_name = "${var.cluster_attr.cluster_name}-external-dns-role"
-    }
-  }
+  external_dns = var.addons.enable_external_dns ? {
+    role_name = "${var.cluster_attr.cluster_name}-external-dns-role"
+  } : {}
 
-  dynamic "external_secrets" {
-    for_each = var.addons.enable_external_secrets ? [1] : []
-    content {
-      role_name = "${var.cluster_attr.cluster_name}-external-secrets-role"
-    }
-  }
+  external_secrets = var.addons.enable_external_secrets ? {
+    role_name = "${var.cluster_attr.cluster_name}-external-secrets-role"
+  } : {}
 
-  dynamic "aws_load_balancer_controller" {
-    for_each = var.addons.enable_aws_load_balancer_controller ? [1] : []
-    content {
-      role_name = "${var.cluster_attr.cluster_name}-lb-controller-role"
-    }
-  }
+  aws_load_balancer_controller = var.addons.enable_aws_load_balancer_controller ? {
+    role_name = "${var.cluster_attr.cluster_name}-lb-controller-role"
+  } : {}
 
-  dynamic "aws_for_fluentbit" {
-    for_each = var.addons.enable_aws_for_fluentbit ? [1] : []
-    content {
-      role_name = "${var.cluster_attr.cluster_name}-aws-for-fluentbit-role"
-    }
-  }
+  aws_for_fluentbit = var.addons.enable_aws_for_fluentbit ? {
+    role_name = "${var.cluster_attr.cluster_name}-aws-for-fluentbit-role"
+  } : {}
 
-  dynamic "karpenter" {
-    for_each = var.addons.enable_karpenter ? [1] : []
-    content {
-      role_name            = "${var.cluster_attr.cluster_name}-karpenter-role"
-      role_name_use_prefix = false
-    }
-  }
+  karpenter = var.addons.enable_karpenter ? {
+    role_name            = "${var.cluster_attr.cluster_name}-karpenter-role"
+    role_name_use_prefix = false
+  } : {}
 
-  dynamic "karpenter_node" {
-    for_each = var.addons.enable_karpenter ? [1] : []
-    content {
-      role_name             = "${var.cluster_attr.cluster_name}-karpenter-node-group-role"
-      instance_profile_name = "${var.cluster_attr.cluster_name}-karpenter-node-group"
-      role_name_use_prefix  = false
-    }
-  }
+  karpenter_node = var.addons.enable_karpenter ? {
+    role_name             = "${var.cluster_attr.cluster_name}-karpenter-node-group-role"
+    instance_profile_name = "${var.cluster_attr.cluster_name}-karpenter-node-group"
+    role_name_use_prefix  = false
+  } : {}
 
-  dynamic "karpenter_sqs" {
-    for_each = var.addons.enable_karpenter ? [1] : []
-    content {
-      queue_name = "${var.cluster_attr.cluster_name}-karpenter-sqs"
-    }
-  }
+  karpenter_sqs = var.addons.enable_karpenter ? {
+    queue_name = "${var.cluster_attr.cluster_name}-karpenter-sqs"
+  } : {}
 
-  dynamic "metrics_server" {
-    for_each = var.addons.enable_metrics_server ? [1] : []
-    content {
-      role_name = "${var.cluster_attr.cluster_name}-metrics-server-role"
-    }
-  }
+  metrics_server = var.addons.enable_metrics_server ? {
+    role_name = "${var.cluster_attr.cluster_name}-metrics-server-role"
+  } : {}
 
-  dynamic "argo_rollouts" {
-    for_each = var.addons.enable_argo_rollouts ? [1] : []
-    content {
-      role_name = "${var.cluster_attr.cluster_name}-argo-rollouts-role"
-    }
-  }
+  argo_rollouts = var.addons.enable_argo_rollouts ? {
+    role_name = "${var.cluster_attr.cluster_name}-argo-rollouts-role"
+  } : {}
 
-  dynamic "cluster_autoscaler" {
-    for_each = var.addons.enable_cluster_autoscaler ? [1] : []
-    content {
-      role_name = "${var.cluster_attr.cluster_name}-cluster-autoscaler-role"
-    }
-  }
+  cluster_autoscaler = var.addons.enable_cluster_autoscaler ? {
+    role_name = "${var.cluster_attr.cluster_name}-cluster-autoscaler-role"
+  } : {}
 
 }
 

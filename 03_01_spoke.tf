@@ -33,7 +33,7 @@ module "spoke_argocd_irsa" {
 }
 
 resource "aws_iam_policy" "spoke_eks_access" {
-  count = var.cluster_attr.info.type == "spoke" ? 0 : 1
+  count = var.cluster_attr.info.type == "spoke" ? 1 : 0
 
   name        = "${var.cluster_attr.cluster_name}-argocd-spoke-eks-access"
   description = "Policy for ArgoCD to access Spoke EKS cluster"

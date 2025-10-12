@@ -94,10 +94,7 @@ variable "addons" {
 variable "access_entries_user" {
 
   default = {
-    "AmazonEKSClusterAdminPolicy" : {
-      user_role_arns = []
-    }
-
+    "AmazonEKSClusterAdminPolicy" : []
   }
 
 }
@@ -105,9 +102,6 @@ variable "access_entries_user" {
 variable "access_entries_role" {
 
   default = {
-    "EC2_LINUX" : {
-      service_role_arns = []
-    }
-
+    "EC2_LINUX" : []
   }
 }

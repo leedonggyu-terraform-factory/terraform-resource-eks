@@ -92,6 +92,7 @@ variable "addons" {
 }
 
 variable "access_entries_user" {
+  type = any
 
   default = {
     "AmazonEKSClusterAdminPolicy" : []
@@ -100,6 +101,7 @@ variable "access_entries_user" {
 }
 
 variable "access_entries_role" {
+  type = any
 
   default = {
     "EC2_LINUX" : []

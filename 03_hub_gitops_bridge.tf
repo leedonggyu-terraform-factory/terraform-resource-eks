@@ -50,7 +50,7 @@ module "argocd_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.0"
 
-  count = var.cluster_attr.info.type == "hub" ? 1 : 0
+  count = var.cluster_attr.info.type == "hub" && var.cluster_attr.info.create ? 1 : 0
 
   role_name = "${var.cluster_attr.cluster_name}-argocd-hub-role"
 
@@ -73,7 +73,7 @@ module "argocd_irsa" {
 }
 
 resource "aws_iam_policy" "irsa_policy" {
-  count = var.cluster_attr.info.type == "hub" ? 1 : 0
+  count = var.cluster_attr.info.type == "hub" && var.cluster_attr.info.create ? 1 : 0
 
   name        = "${var.cluster_attr.cluster_name}-argocd-irsa"
   description = "IRSA policy for ArgoCD"
@@ -95,7 +95,7 @@ resource "aws_iam_policy" "irsa_policy" {
 }
 
 # resource "kubernetes_manifest" "argo_app_project" {
-#   count = var.cluster_attr.info.type == "hub" ? 1 : 0
+#   count = var.cluster_attr.info.type == "hub" && var.cluster_attr.info.create ? 1 : 0
 
 #   manifest = {
 #     apiVersion = "argoproj.io/v1alpha1"

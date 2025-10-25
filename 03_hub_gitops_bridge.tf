@@ -40,7 +40,7 @@ module "gitops-bridge" {
     })
   }
 
-  depends_on = [null_resource.eks_kubeconfig]
+  depends_on = [null_resource.eks_kubeconfig, module.eks]
 }
 
 ###############################################################

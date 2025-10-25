@@ -13,7 +13,7 @@ module "gitops-bridge" {
   source = "gitops-bridge-dev/gitops-bridge/helm"
   // initial gitops-bridge
   // hub cluster에만 적용
-  create = true
+  create = var.cluster_attr.info.create
 
   cluster = {
     cluster_name = var.cluster_attr.cluster_name

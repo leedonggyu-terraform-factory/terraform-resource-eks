@@ -4,6 +4,7 @@ variable "cluster_attr" {
     info                                      = object({
       type = string // hub or spoke
       oidc_provider_arn = string // if hub, not used
+      create = bool // if true, create gitops-bridge
     })
     cluster_name                             = string
     environment                              = string
@@ -26,6 +27,7 @@ variable "cluster_attr" {
     info                                      = {
       type = "spoke"
       oidc_provider_arn = ""
+      create = false
     }
     cluster_name                             = ""
     environment                              = ""

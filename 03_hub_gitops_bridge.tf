@@ -68,8 +68,6 @@ module "argocd_irsa" {
   tags = {
     Name = "${var.cluster_attr.cluster_name}-argocd-hub-role"
   }
-
-  depends_on = [null_resource.eks_kubeconfig]
 }
 
 resource "aws_iam_policy" "irsa_policy" {
@@ -90,8 +88,6 @@ resource "aws_iam_policy" "irsa_policy" {
       }
     ]
   })
-
-  depends_on = [null_resource.eks_kubeconfig]
 }
 
 # resource "kubernetes_manifest" "argo_app_project" {

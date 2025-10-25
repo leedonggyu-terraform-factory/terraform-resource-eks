@@ -3,7 +3,7 @@ resource "null_resource" "eks_kubeconfig" {
     command = "aws eks update-kubeconfig --name ${var.cluster_attr.cluster_name} --region ap-northeast-2"
   }
 
-  depends_on = [module.eks]
+  depends_on = [module.eks, null_resource.eks_kubeconfig]
 }
 
 ////////////////////////////////////////////////////// hub cluster //////////////////////////////////////////////////////

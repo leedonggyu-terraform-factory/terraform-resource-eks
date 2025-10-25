@@ -6,6 +6,32 @@ resource "null_resource" "eks_kubeconfig" {
   depends_on = [module.eks]
 }
 
+# EKS 클러스터가 완전히 준비되었는지 확인하는 리소스
+resource "null_resource" "wait_for_cluster" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "Waiting for EKS cluster to be ready..."
+      aws eks wait cluster-active --name ${var.cluster_attr.cluster_name} --region ap-northeast-2
+      echo "EKS cluster is ready!"
+    EOT
+  }
+
+  depends_on = [module.eks]
+}
+
+# 클러스터 연결 테스트
+resource "null_resource" "test_cluster_connection" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "Testing cluster connection..."
+      kubectl get nodes --kubeconfig ~/.kube/config
+      echo "Cluster connection successful!"
+    EOT
+  }
+
+  depends_on = [null_resource.eks_kubeconfig, null_resource.wait_for_cluster]
+}
+
 ////////////////////////////////////////////////////// hub cluster //////////////////////////////////////////////////////
 module "gitops-bridge" {
   count = var.cluster_attr.info.type == "hub" ? 1 : 0
@@ -40,7 +66,7 @@ module "gitops-bridge" {
     })
   }
 
-  depends_on = [null_resource.eks_kubeconfig, module.eks]
+  depends_on = [null_resource.eks_kubeconfig, null_resource.wait_for_cluster, null_resource.test_cluster_connection, module.eks]
 }
 
 ###############################################################
@@ -69,7 +95,7 @@ module "argocd_irsa" {
     Name = "${var.cluster_attr.cluster_name}-argocd-hub-role"
   }
 
-  depends_on = [null_resource.eks_kubeconfig]
+  depends_on = [null_resource.eks_kubeconfig, null_resource.wait_for_cluster, null_resource.test_cluster_connection]
 }
 
 resource "aws_iam_policy" "irsa_policy" {
@@ -91,7 +117,7 @@ resource "aws_iam_policy" "irsa_policy" {
     ]
   })
 
-  depends_on = [null_resource.eks_kubeconfig]
+  depends_on = [null_resource.eks_kubeconfig, null_resource.wait_for_cluster, null_resource.test_cluster_connection]
 }
 
 # resource "kubernetes_manifest" "argo_app_project" {

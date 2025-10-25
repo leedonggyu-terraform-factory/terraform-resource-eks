@@ -7,6 +7,11 @@ provider "kubernetes" {
     command     = "aws"
     args        = ["eks", "get-token", "--cluster-name", "${module.eks.cluster_name}", "--region", "ap-northeast-2"]
   }
+
+  # 클러스터가 준비될 때까지 대기
+  experiments {
+    manifest_resource = true
+  }
 }
 
 provider "helm" {

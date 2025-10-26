@@ -14,7 +14,7 @@ output "environment" {
   value = var.cluster_attr.environment
 }
 
-output "cluster_enpoint" {
+output "cluster_endpoint" {
   value = module.eks.cluster_endpoint
 }
 

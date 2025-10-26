@@ -1,60 +1,45 @@
-resource "time_sleep" "wait_for_argocd" {
-    create_duration = "60s"
+# resource "kubernetes_manifest" "app_project" {
 
-    depends_on = [
-        module.eks,
-        module.blueprints
-    ]
-}
+#     manifest = {
+#         apiVersion = "argoproj.io/v1alpha1"
+#         kind = "AppProject"
+#         metadata = {
+#             name = "${var.cluster_attr.cluster_name}-${var.cluster_attr.environment}-workspace"
+#             namespace = "argocd"
+#             labels = {
+#                 environment = var.cluster_attr.environment
+#                 managedBy = "terraform"
+#             }
+#         }
+#         spec = {
+#             description = "${var.cluster_attr.cluster_name}-${var.cluster_attr.environment} workspace"
 
-resource "kubernetes_manifest" "app_project" {
+#             ## Git 허용 여부
+#             sourceRepos = ["*"]
 
-    manifest = {
-        apiVersion = "argoproj.io/v1alpha1"
-        kind = "AppProject"
-        metadata = {
-            name = "${var.cluster_attr.cluster_name}-${var.cluster_attr.environment}-workspace"
-            namespace = "argocd"
-            labels = {
-                environment = var.cluster_attr.environment
-                managedBy = "terraform"
-            }
-        }
-        spec = {
-            description = "${var.cluster_attr.cluster_name}-${var.cluster_attr.environment} workspace"
+#             ## 클러스터, 네임스페이스 허용
+#             destinations = [
+#                 {
+#                     service = "*"
+#                     namespace = "*"
+#                 }
+#             ]
 
-            ## Git 허용 여부
-            sourceRepos = ["*"]
+#             ## 클러스터 리소스 허용
+#             clusterResourceWhitelist = [
+#                 {
+#                     group = "*"
+#                     kind = "*"
+#                 }
+#             ]
 
-            ## 클러스터, 네임스페이스 허용
-            destinations = [
-                {
-                    service = "*"
-                    namespace = "*"
-                }
-            ]
-
-            ## 클러스터 리소스 허용
-            clusterResourceWhitelist = [
-                {
-                    group = "*"
-                    kind = "*"
-                }
-            ]
-
-            # 네임스페이스 리소스 허용
-            namespaceResourceWhitelist = [
-                {
-                    group = "*"
-                    kind = "*"
-                }
-            ]
-        }
-    }
-
-    depends_on = [
-        module.eks,
-        module.blueprints,
-        time_sleep.wait_for_argocd
-    ]
-}
+#             # 네임스페이스 리소스 허용
+#             namespaceResourceWhitelist = [
+#                 {
+#                     group = "*"
+#                     kind = "*"
+#                 }
+#             ]
+#         }
+#     }
+# }

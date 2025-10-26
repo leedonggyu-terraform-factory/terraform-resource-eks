@@ -6,7 +6,7 @@ module "spoke_argocd_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.0"
 
-  count = var.cluster_attr.info.type == "spoke" && var.cluster_attr.info.create ? 1 : 0  # Hub가 아닐 때만 생성
+  count = var.cluster_attr.info.type == "spoke" ? 1 : 0  # Hub가 아닐 때만 생성
 
   role_name = "${var.cluster_attr.cluster_name}-argocd-spoke-access"
 
@@ -33,7 +33,7 @@ module "spoke_argocd_irsa" {
 }
 
 resource "aws_iam_policy" "spoke_eks_access" {
-  count = var.cluster_attr.info.type == "spoke" && var.cluster_attr.info.create ? 1 : 0
+  count = var.cluster_attr.info.type == "spoke" ? 1 : 0
 
   name        = "${var.cluster_attr.cluster_name}-argocd-spoke-eks-access"
   description = "Policy for ArgoCD to access Spoke EKS cluster"
@@ -53,7 +53,7 @@ resource "aws_iam_policy" "spoke_eks_access" {
 }
 
 resource "local_file" "spoke_secret_yaml" {
-    count = var.cluster_attr.info.type == "spoke" && var.cluster_attr.info.create ? 1 : 0
+    count = var.cluster_attr.info.type == "spoke" ? 1 : 0
 
     filename = "./${var.cluster_attr.cluster_name}-spoke-cluster.yaml"
 

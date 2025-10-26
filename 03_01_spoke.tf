@@ -6,14 +6,14 @@ module "spoke_argocd_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.0"
 
-  count = var.cluster_attr.info.type == "spoke" ? 1 : 0  # Hub가 아닐 때만 생성
+  count = var.cluster_attr.info.type == "spoke" ? 1 : 0 # Hub가 아닐 때만 생성
 
   role_name = "${var.cluster_attr.cluster_name}-argocd-spoke-access"
 
   # Hub 클러스터의 OIDC Provider 사용
   oidc_providers = {
     hub = {
-      provider_arn               = var.cluster_attr.info.oidc_provider_arn
+      provider_arn = var.cluster_attr.info.oidc_provider_arn
       namespace_service_accounts = [
         "argocd:argocd-application-controller",
         "argocd:argocd-server"
@@ -53,11 +53,11 @@ resource "aws_iam_policy" "spoke_eks_access" {
 }
 
 resource "local_file" "spoke_secret_yaml" {
-    count = var.cluster_attr.info.type == "spoke" ? 1 : 0
+  count = var.cluster_attr.info.type == "spoke" ? 1 : 0
 
-    filename = "./${var.cluster_attr.cluster_name}-spoke-cluster.yaml"
+  filename = "./${var.cluster_attr.cluster_name}-spoke-cluster.yaml"
 
-    content = <<-EOT
+  content = <<-EOT
         apiVersion: v1
         kind: Secret
         metadata:

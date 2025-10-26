@@ -8,7 +8,7 @@ resource "null_resource" "eks_kubeconfig" {
 
 ////////////////////////////////////////////////////// hub cluster //////////////////////////////////////////////////////
 module "gitops-bridge" {
-  count = var.cluster_attr.info.type == "hub" && var.cluster_attr.info.create ? 1 : 0
+  count = var.cluster_attr.info.type == "hub" ? 1 : 0
 
   source = "gitops-bridge-dev/gitops-bridge/helm"
   // initial gitops-bridge

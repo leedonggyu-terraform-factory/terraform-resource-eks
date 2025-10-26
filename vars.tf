@@ -1,8 +1,8 @@
 variable "cluster_attr" {
 
   type = object({
-    info                                      = object({
-      type = string // hub or spoke
+    info = object({
+      type              = string // hub or spoke
       oidc_provider_arn = string // if hub, not used
     })
     cluster_name                             = string
@@ -23,8 +23,8 @@ variable "cluster_attr" {
   })
 
   default = {
-    info                                      = {
-      type = "spoke"
+    info = {
+      type              = "spoke"
       oidc_provider_arn = ""
     }
     cluster_name                             = ""

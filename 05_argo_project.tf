@@ -1,3 +1,12 @@
+resource "time_sleep" "wait_for_argocd" {
+    create_duration = "60s"
+
+    depends_on = [
+        module.eks,
+        module.blueprints
+    ]
+}
+
 resource "kubernetes_manifest" "app_project" {
 
     manifest = {
@@ -42,4 +51,10 @@ resource "kubernetes_manifest" "app_project" {
             ]
         }
     }
+
+    depends_on = [
+        module.eks,
+        module.blueprints,
+        time_sleep.wait_for_argocd
+    ]
 }

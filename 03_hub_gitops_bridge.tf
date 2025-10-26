@@ -14,7 +14,7 @@ module "gitops-bridge" {
   // initial gitops-bridge
   // hub cluster에만 적용
 
-  create = false
+  create = true
 
   cluster = {
     cluster_name = var.cluster_attr.cluster_name

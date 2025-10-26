@@ -1,47 +1,47 @@
-resource "null_resource" "eks_kubeconfig" {
-  provisioner "local-exec" {
-    command = "aws eks update-kubeconfig --name ${var.cluster_attr.cluster_name} --region ap-northeast-2"
-  }
+# resource "null_resource" "eks_kubeconfig" {
+#   provisioner "local-exec" {
+#     command = "aws eks update-kubeconfig --name ${var.cluster_attr.cluster_name} --region ap-northeast-2"
+#   }
 
-  depends_on = [module.eks, null_resource.eks_kubeconfig]
-}
+#   depends_on = [module.eks, null_resource.eks_kubeconfig]
+# }
 
 ////////////////////////////////////////////////////// hub cluster //////////////////////////////////////////////////////
-module "gitops-bridge" {
-  count = var.cluster_attr.info.type == "hub" ? 1 : 0
+# module "gitops-bridge" {
+#   count = var.cluster_attr.info.type == "hub" && var.cluster_attr.info.create ? 1 : 0
 
-  source = "gitops-bridge-dev/gitops-bridge/helm"
-  // initial gitops-bridge
-  // hub cluster에만 적용
-  create = true
+#   source = "gitops-bridge-dev/gitops-bridge/helm"
+#   // initial gitops-bridge
+#   // hub cluster에만 적용
+#   create = var.cluster_attr.info.create
 
-  cluster = {
-    cluster_name = var.cluster_attr.cluster_name
-    environment  = try(var.cluster_attr.environment, "common")
-    metadata = merge({
-      addons_repo_url      = var.gitops_bridge_attr.addons_repo_url
-      addons_repo_basepath = var.gitops_bridge_attr.addons_repo_basepath
-      addons_repo_path     = var.gitops_bridge_attr.addons_repo_path
-      addons_repo_revision = try(var.gitops_bridge_attr.addons_repo_revision, "main")
-      kubernetes_version   = var.cluster_attr.cluster_version
-    }, var.gitops_bridge_metadata),
-    addons = merge(
-      {
-        for addon, bool in var.addons :
-        addon => bool if addon != "external_dns_route53_zone_arns"
-      },
-    )
-  }
+#   cluster = {
+#     cluster_name = var.cluster_attr.cluster_name
+#     environment  = try(var.cluster_attr.environment, "common")
+#     metadata = merge({
+#       addons_repo_url      = var.gitops_bridge_attr.addons_repo_url
+#       addons_repo_basepath = var.gitops_bridge_attr.addons_repo_basepath
+#       addons_repo_path     = var.gitops_bridge_attr.addons_repo_path
+#       addons_repo_revision = try(var.gitops_bridge_attr.addons_repo_revision, "main")
+#       kubernetes_version   = var.cluster_attr.cluster_version
+#     }, var.gitops_bridge_metadata),
+#     addons = merge(
+#       {
+#         for addon, bool in var.addons :
+#         addon => bool if addon != "external_dns_route53_zone_arns"
+#       },
+#     )
+#   }
 
-  apps = {
-    addons = templatefile("${path.module}/apps.yaml", {
-      cluster_name = var.cluster_attr.cluster_name
-      environment  = try(var.cluster_attr.environment, "common")
-    })
-  }
+#   apps = {
+#     addons = templatefile("${path.module}/apps.yaml", {
+#       cluster_name = var.cluster_attr.cluster_name
+#       environment  = try(var.cluster_attr.environment, "common")
+#     })
+#   }
 
-  depends_on = [null_resource.eks_kubeconfig]
-}
+#   depends_on = [null_resource.eks_kubeconfig]
+# }
 
 ###############################################################
 ####### hub cluster에만 구성
@@ -50,7 +50,7 @@ module "argocd_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.0"
 
-  count = var.cluster_attr.info.type == "hub" ? 1 : 0
+  count = var.cluster_attr.info.type == "hub" && var.cluster_attr.info.create ? 1 : 0
 
   role_name = "${var.cluster_attr.cluster_name}-argocd-hub-role"
 
@@ -68,12 +68,10 @@ module "argocd_irsa" {
   tags = {
     Name = "${var.cluster_attr.cluster_name}-argocd-hub-role"
   }
-
-  depends_on = [null_resource.eks_kubeconfig]
 }
 
 resource "aws_iam_policy" "irsa_policy" {
-  count = var.cluster_attr.info.type == "hub" ? 1 : 0
+  count = var.cluster_attr.info.type == "hub" && var.cluster_attr.info.create ? 1 : 0
 
   name        = "${var.cluster_attr.cluster_name}-argocd-irsa"
   description = "IRSA policy for ArgoCD"
@@ -90,12 +88,10 @@ resource "aws_iam_policy" "irsa_policy" {
       }
     ]
   })
-
-  depends_on = [null_resource.eks_kubeconfig]
 }
 
 # resource "kubernetes_manifest" "argo_app_project" {
-#   count = var.cluster_attr.info.type == "hub" ? 1 : 0
+#   count = var.cluster_attr.info.type == "hub" && var.cluster_attr.info.create ? 1 : 0
 
 #   manifest = {
 #     apiVersion = "argoproj.io/v1alpha1"

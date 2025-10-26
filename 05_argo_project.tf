@@ -1,7 +1,7 @@
 resource "kubernetes_manifest" "app_project" {
 
     manifest = {
-        apiVersion = "argoproj.io/v1/alpha1"
+        apiVersion = "argoproj.io/v1alpha1"
         kind = "AppProject"
         metadata = {
             name = "${var.cluster_attr.cluster_name}-${var.cluster_attr.environment}-workspace"

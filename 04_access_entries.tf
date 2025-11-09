@@ -32,13 +32,13 @@ resource "aws_eks_access_policy_association" "user_access_policy_association" {
 // EC_LINUX
 resource "aws_eks_access_entry" "service_node_access_entry" {
   for_each = {
-    for type, arn in var.access_entries_role.EC2_LINUX :
-    type => arn
+    for i, arn in var.access_entries_role.EC2_LINUX :
+    i => arn
   }
 
   cluster_name  = var.cluster_attr.cluster_name
   principal_arn = each.value
-  type          = each.key
+  type          = "EC2_LINUX"
 }
 
 resource "aws_eks_access_entry" "karpenter_node_access_entry" {

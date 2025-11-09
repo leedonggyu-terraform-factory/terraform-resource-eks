@@ -32,7 +32,7 @@ resource "aws_eks_access_policy_association" "user_access_policy_association" {
 // EC_LINUX
 resource "aws_eks_access_entry" "service_node_access_entry" {
   for_each = {
-    for i, arn in var.access_entries_role.EC2_LINUX :
+    for type, arn in var.access_entries_role.EC2_LINUX :
     type => arn
   }
 

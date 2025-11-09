@@ -37,7 +37,7 @@ resource "aws_eks_access_entry" "service_node_access_entry" {
   }
 
   cluster_name  = var.cluster_attr.cluster_name
-  principal_arn = each.key
+  principal_arn = each.value
   type          = each.key
 }
 

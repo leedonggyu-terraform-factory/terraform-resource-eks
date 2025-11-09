@@ -29,6 +29,8 @@ resource "aws_eks_access_policy_association" "user_access_policy_association" {
 
 
 /////////////////////////////////// Service
+data "aws_caller_identity" "current" {}
+
 // EC_LINUX
 resource "aws_eks_access_entry" "service_node_access_entry" {
   for_each = {
@@ -37,7 +39,7 @@ resource "aws_eks_access_entry" "service_node_access_entry" {
   }
 
   cluster_name  = var.cluster_attr.cluster_name
-  principal_arn = each.value
+  principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${each.value}"
   type          = "EC2_LINUX"
 }
 

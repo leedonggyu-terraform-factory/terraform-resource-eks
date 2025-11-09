@@ -105,4 +105,6 @@ module "ebs_csi_driver_irsa" {
   }
 
   tags = var.cluster_attr.cluster_tags
+
+  depends_on = [module.eks]
 }

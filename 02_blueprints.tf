@@ -23,7 +23,6 @@ module "blueprints" {
   enable_metrics_server               = var.addons.enable_metrics_server
   enable_argo_rollouts                = var.addons.enable_argo_rollouts
   enable_cluster_autoscaler           = var.addons.enable_cluster_autoscaler
-  enable_prometheus_stack             = var.addons.enable_prometheus_stack
   external_dns_route53_zone_arns      = var.addons.external_dns_route53_zone_arns
 
   eks_addons = {
